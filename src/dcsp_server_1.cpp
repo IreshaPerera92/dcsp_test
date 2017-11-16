@@ -142,6 +142,9 @@ void Agent::agent_init(std::vector<std::string> &agents,const std::string &init_
     my_current_point = init_value;
     my_domain = init_my_domain;
     //my_current_point = init_point;
+
+    
+	ROS_INFO("DCSP SERVICE 1 INSIDE agent init");
     
     
     std::vector<std::string>::iterator it;
@@ -166,11 +169,15 @@ void Agent::agent_init(std::vector<std::string> &agents,const std::string &init_
     select_best_point();
 
     // send ok message to all the elements in the lower_priority_agents
+
+	ROS_INFO("Selected point x value: %f", my_current_point.x);
+	ROS_INFO("Selected point y value: %f", my_current_point.y);
+	ROS_INFO("Selected point z value: %f", my_current_point.z);
     is_agent_initialized = true;
-    if(my_agent_identifier == "firefly1"){
+    if(my_agent_identifier == "firefly_1"){
         dcsp_srv_2_recieve_ok();
         dcsp_srv_3_recieve_ok();
-    }else if(my_agent_identifier == "firefly2"){
+    }else if(my_agent_identifier == "firefly_2"){
         dcsp_srv_3_recieve_ok();
     }
     
@@ -261,11 +268,11 @@ void Agent::check_agent_view(){
                     
                     std::string service_name;
                     
-                    if (lower_priority_agent == "firefly1") {
+                    if (lower_priority_agent == "firefly_1") {
                         service_name = "dcsp_srv_1";
-                    }else if (lower_priority_agent == "firefly2") {
+                    }else if (lower_priority_agent == "firefly_2") {
                         service_name = "dcsp_srv_2";
-                    }else if (lower_priority_agent == "firefly3") {
+                    }else if (lower_priority_agent == "firefly_3") {
                         service_name = "dcsp_srv_3";
                     }
                     
@@ -300,19 +307,12 @@ void Agent::check_agent_view(){
                      //  ROS_ERROR("Failed to call service add_two_ints");
                      //  return 1;
                      }
-                     
-               
-                    
-                    
-                }
+                        }
                 
                 break;
                 
             }
-            
-            
-            
-        }
+           }
         
         if (!is_new_value_consistent) {
             backtrack();
@@ -458,11 +458,11 @@ void Agent::send_nogood_msg(const std::vector<agent_view_element> &no_goods, con
             
             std::string service_name;
             
-            if (lowest_priority_agent_identifier == "firefly1") {
+            if (lowest_priority_agent_identifier == "firefly_1") {
                 service_name = "dcsp_srv_1";
-            }else if (lowest_priority_agent_identifier == "firefly2") {
+            }else if (lowest_priority_agent_identifier == "firefly_2") {
                 service_name = "dcsp_srv_2";
-            }else if (lowest_priority_agent_identifier == "firefly3") {
+            }else if (lowest_priority_agent_identifier == "firefly_3") {
                 service_name = "dcsp_srv_3";
             }
             
@@ -628,7 +628,6 @@ bool Agent::select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response
     //Agent::req request;
     //Agent::req response;
     
-    
 
     if(req.init){
         std::vector<std::string> agentsVector;
@@ -651,7 +650,6 @@ bool Agent::select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response
 		
 		my_domain_vector.push_back(p);
 	}
-	
         agent_init(agentsVector, init_agent_identifier_variable ,pt ,my_domain_vector);
        
 

@@ -133,17 +133,22 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(dcsp_server_1_node src/dcsp_server_1.cpp)
-target_link_libraries(dcsp_server_1_node ${catkin_LIBRARIES})
-add_dependencies(dcsp_server_1_node ${dcsp_EXPORTED_TARGETS})
+add_executable(dcsp_server_1 src/dcsp_server_1.cpp)
+target_link_libraries(dcsp_server_1 ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_1 ${dcsp_EXPORTED_TARGETS})
 
-add_executable(dcsp_server_2_node src/dcsp_server_2.cpp)
-target_link_libraries(dcsp_server_2_node ${catkin_LIBRARIES})
-add_dependencies(dcsp_server_2_node ${dcsp_EXPORTED_TARGETS})
 
-add_executable(dcsp_server_3_node src/dcsp_server_3.cpp)
-target_link_libraries(dcsp_server_3_node ${catkin_LIBRARIES})
-add_dependencies(dcsp_server_3_node ${dcsp_EXPORTED_TARGETS})
+add_executable(dcsp_server_2 src/dcsp_server_2.cpp)
+target_link_libraries(dcsp_server_2 ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_2 ${dcsp_EXPORTED_TARGETS})
+
+add_executable(dcsp_server_3 src/dcsp_server_3.cpp)
+target_link_libraries(dcsp_server_3 ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_3 ${dcsp_EXPORTED_TARGETS})
+
+add_executable(dcsp_server_client_1 src/dcsp_server_1_client.cpp)
+target_link_libraries(dcsp_server_client_1 ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_client_1 ${dcsp_EXPORTED_TARGETS})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

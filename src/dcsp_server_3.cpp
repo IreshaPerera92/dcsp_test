@@ -167,10 +167,10 @@ void Agent::agent_init(std::vector<std::string> &agents,const std::string &init_
 
     // send ok message to all the elements in the lower_priority_agents
     is_agent_initialized = true;
-    if(my_agent_identifier == "firefly1"){
+    if(my_agent_identifier == "firefly_1"){
         dcsp_srv_2_recieve_ok();
         dcsp_srv_3_recieve_ok();
-    }else if(my_agent_identifier == "firefly2"){
+    }else if(my_agent_identifier == "firefly_2"){
         dcsp_srv_3_recieve_ok();
     }
     
@@ -184,6 +184,8 @@ void Agent::recieve_ok_msg(const std::string &agent_identifier, const point &val
     bool is_agent_in_agent_view = false;
     
     std::vector<agent_view_element>::iterator it;
+
+    ROS_INFO("DCSP SERVICE 3 RECEIVE OK CALLED");
 
     
     for (it = agent_view.begin(); it != agent_view.end(); ++it){
@@ -261,11 +263,11 @@ void Agent::check_agent_view(){
                     
                     std::string service_name;
                     
-                    if (lower_priority_agent == "firefly1") {
+                    if (lower_priority_agent == "firefly_1") {
                         service_name = "dcsp_srv_1";
-                    }else if (lower_priority_agent == "firefly2") {
+                    }else if (lower_priority_agent == "firefly_2") {
                         service_name = "dcsp_srv_2";
-                    }else if (lower_priority_agent == "firefly3") {
+                    }else if (lower_priority_agent == "firefly_3") {
                         service_name = "dcsp_srv_3";
                     }
                     
@@ -458,11 +460,11 @@ void Agent::send_nogood_msg(const std::vector<agent_view_element> &no_goods, con
             
             std::string service_name;
             
-            if (lowest_priority_agent_identifier == "firefly1") {
+            if (lowest_priority_agent_identifier == "firefly_1") {
                 service_name = "dcsp_srv_1";
-            }else if (lowest_priority_agent_identifier == "firefly2") {
+            }else if (lowest_priority_agent_identifier == "firefly_2") {
                 service_name = "dcsp_srv_2";
-            }else if (lowest_priority_agent_identifier == "firefly3") {
+            }else if (lowest_priority_agent_identifier == "firefly_3") {
                 service_name = "dcsp_srv_3";
             }
             

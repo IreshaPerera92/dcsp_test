@@ -146,9 +146,9 @@ add_executable(dcsp_server_3 src/dcsp_server_3.cpp)
 target_link_libraries(dcsp_server_3 ${catkin_LIBRARIES})
 add_dependencies(dcsp_server_3 ${dcsp_EXPORTED_TARGETS})
 
-add_executable(dcsp_server_client_1 src/dcsp_server_1_client.cpp)
-target_link_libraries(dcsp_server_client_1 ${catkin_LIBRARIES})
-add_dependencies(dcsp_server_client_1 ${dcsp_EXPORTED_TARGETS})
+add_executable(dcsp_server_1_client src/dcsp_server_1_client.cpp)
+target_link_libraries(dcsp_server_1_client ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_1_client ${dcsp_EXPORTED_TARGETS})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

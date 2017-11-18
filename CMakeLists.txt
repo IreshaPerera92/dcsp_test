@@ -52,6 +52,7 @@ add_message_files(
   FILES
   customPoint.msg
   agentViewElement.msg
+  dcsp_msg.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -150,6 +151,13 @@ add_executable(dcsp_server_1_client src/dcsp_server_1_client.cpp)
 target_link_libraries(dcsp_server_1_client ${catkin_LIBRARIES})
 add_dependencies(dcsp_server_1_client ${dcsp_EXPORTED_TARGETS})
 
+add_executable(dcsp_server_2_client src/dcsp_server_2_client.cpp)
+target_link_libraries(dcsp_server_2_client ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_2_client ${dcsp_EXPORTED_TARGETS})
+
+add_executable(dcsp_server_3_client src/dcsp_server_3_client.cpp)
+target_link_libraries(dcsp_server_3_client ${catkin_LIBRARIES})
+add_dependencies(dcsp_server_3_client ${dcsp_EXPORTED_TARGETS})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

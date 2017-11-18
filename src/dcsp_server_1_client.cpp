@@ -1,6 +1,6 @@
 #include <iostream>
 #include "ros/ros.h"
-#include "dcsp/dcsp_srv.h"
+#include "dcsp/dcsp_msg.h"
 #include "dcsp/customPoint.h"
 #include "dcsp/agentViewElement.h"
 
@@ -18,27 +18,30 @@ int main(int argc, char **argv)
   //     ROS_INFO("usage: dcsp_server_1_client X Y");
   //     return 1;
   //   }
-   
+
      ros::NodeHandle n;
-     ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>("dcsp_srv_1");
-     dcsp::dcsp_srv srv;
+     ros::Publisher dcsp_pub_1 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_1", 1000);
+//     ros::Publisher dcsp_pub_2 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_2", 1000);
+//     ros::Publisher dcsp_pub_3 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_3", 1000);
+
+     dcsp::dcsp_msg msg;
        
-     srv.request.init_agent_identifier = "firefly_1";
+     msg.init_agent_identifier = "firefly_1";
 
      dcsp::customPoint cp;
      cp.x = 1.0;
      cp.y = 3.2;
      cp.z = 1.5;
-     srv.request.init_point = cp;
+     msg.init_point = cp;
        
        std::vector<std::string> agents_vector;
        agents_vector.push_back("firefly_2");
        agents_vector.push_back("firefly_3");
-       srv.request.agents = agents_vector;
+       msg.agents = agents_vector;
 
        std::vector<dcsp::customPoint> my_domain_vector;
 
-       for (int i = 0; i < 6 ; ++i) {
+       for (int i = 0; i < 1 ; ++i) {
            dcsp::customPoint c;
            c.x = 2.4 + c1;
            c.y = 5.7 + c2;
@@ -48,15 +51,15 @@ int main(int argc, char **argv)
            c2 += 1.2;
            c3 += 3.4;
        }
-       srv.request.my_domain = my_domain_vector;
+       msg.my_domain = my_domain_vector;
 
        std::string ok_agent_identifier_variable = "test";
-       srv.request.ok_agent_identifier  = ok_agent_identifier_variable;
+       msg.ok_agent_identifier  = ok_agent_identifier_variable;
        dcsp::customPoint ok_value_point;
        ok_value_point.x = 1.0;
        ok_value_point.y = 1.0;
        ok_value_point.z = 1.0;
-       srv.request.ok_value = ok_value_point;
+       msg.ok_value = ok_value_point;
 
        std::vector<dcsp::agentViewElement> no_goods_vector;
 
@@ -81,21 +84,20 @@ int main(int argc, char **argv)
        agnt3.value.z = 2.5;
        no_goods_vector.push_back(agnt3);
 
-       srv.request.no_goods = no_goods_vector;
+       msg.no_goods = no_goods_vector;
 
-       srv.request.init = true;
-       srv.request.ok = false;
-       srv.request.nogood = false;
+       msg.init = true;
+       msg.ok = false;
+       msg.nogood = false;
 
-     if (client.call(srv))
-    {
-       ROS_INFO("Message received.");
-     }
-     else
-     {
-       ROS_ERROR("Failed to call dcsp service.");
-       return 1;
-     }
+
+    ROS_INFO("Init : %d",msg.init );
+    ros::Rate loop_rate(0.1);
+    while(n.ok()){
+        dcsp_pub_1.publish(msg);
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
    
      return 0;
    }

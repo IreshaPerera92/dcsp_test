@@ -8,14 +8,22 @@
 
 #include <iostream>
 #include "ros/ros.h"
+#include "std_msgs/String.h"
 #include "dcsp/dcsp_srv.h"
 #include "dcsp/customPoint.h"
 #include "dcsp/agentViewElement.h"
+#include "dcsp/dcsp_msg.h"
 
 #include <list>
 #include <vector>
 #include <math.h>
+#include <sstream>
+#include <ctime>
+#include <limits>
 
+ros::Publisher dcsp_pub_1;
+ros::Publisher dcsp_pub_2;
+ros::Publisher dcsp_pub_3;
 
 class Agent {
     
@@ -93,11 +101,9 @@ public:
     bool same_points(const point &point1, const point &point2);
     void backtrack();
     void select_best_point();
-    bool select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response &res);
-    void dcsp_srv_2_recieve_ok();
-    void dcsp_srv_3_recieve_ok();
-    
-    
+    void select_method(const dcsp::dcsp_msg& req);
+    void dcsp_msg_2_recieve_ok();
+    void dcsp_msg_3_recieve_ok();
     
 };
 /*
@@ -174,16 +180,15 @@ void Agent::agent_init(std::vector<std::string> &agents,const std::string &init_
 	ROS_INFO("Selected point y value: %f", my_current_point.y);
 	ROS_INFO("Selected point z value: %f", my_current_point.z);
     is_agent_initialized = true;
+
     if(my_agent_identifier == "firefly_1"){
-        dcsp_srv_2_recieve_ok();
-        dcsp_srv_3_recieve_ok();
+	ROS_INFO("Firefly_1 call the service of Firefly_2.");
+        dcsp_msg_2_recieve_ok();
+	ROS_INFO("Firefly_1 call the service of Firefly_3.");
+        dcsp_msg_3_recieve_ok();
     }else if(my_agent_identifier == "firefly_2"){
-        dcsp_srv_3_recieve_ok();
+        dcsp_msg_3_recieve_ok();
     }
-    
-    
-    
-    
 }
 
 void Agent::recieve_ok_msg(const std::string &agent_identifier, const point &value){
@@ -214,7 +219,7 @@ void Agent::recieve_ok_msg(const std::string &agent_identifier, const point &val
 }
 
 void Agent::receive_nogood_msg(const std::vector<agent_view_element> &no_goods){
-    
+    ROS_INFO("DCSP_SERVER_1 NOGOOD RECEIVED.");
     no_goods_list.insert(no_goods_list.end(), no_goods.begin(),no_goods.end());
     check_agent_view();
     
@@ -237,7 +242,7 @@ void Agent::check_agent_view(){
                 std::vector<agent_view_element>::iterator it2;
                 
                 
-                for (it2 = agent_view.begin(); it2 != agent_view.end(); ++it2){
+                for (it2 = agent_view.begin(); it2 != agent_view.end(); ++it2){ 
                     
                     if(same_points(it2->value, *it)){
                         is_new_value_consistent = false;
@@ -264,50 +269,39 @@ void Agent::check_agent_view(){
                     //lower_priority_agent.recieve_ok_msg(my_agent_identifier, my_current_point);
                     
                     /* Call the corresponding firefly node's service. Example : for firefly1 call dcspe_srv_1 service */
-                    
-                    
-                    std::string service_name;
-                    
-                    if (lower_priority_agent == "firefly_1") {
-                        service_name = "dcsp_srv_1";
-                    }else if (lower_priority_agent == "firefly_2") {
-                        service_name = "dcsp_srv_2";
-                    }else if (lower_priority_agent == "firefly_3") {
-                        service_name = "dcsp_srv_3";
-                    }
-                    
-                    
-                     
-                     ros::NodeHandle n;
-                     ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>(service_name);
-                     dcsp::dcsp_srv srv;
+
+
+//                     ros::NodeHandle n;
+//                     ros::ServiceClient client = n.serviceClient<dcsp::dcsp_msg>(service_name);
+                     dcsp::dcsp_msg msg;
                     // srv.request.init_agent_identifier = ""NULL"";
                     // srv.request.init_point = NULL;
                     // srv.request.agents = NULL;
                     // srv.request.my_domain = NULL;
                     // srv.request.ok_agent_identifier = my_agent_identifier;
-                srv.request.ok_agent_identifier = my_agent_identifier;
+                msg.ok_agent_identifier = my_agent_identifier;
 
    		dcsp::customPoint c;
     		c.x = my_current_point.x;
     		c.y = my_current_point.y;
     		c.z = my_current_point.z;
-    		srv.request.ok_value = c;
+                    msg.ok_value = c;
                     // srv.request.no_goods = NULL;
-                     srv.request.init = false;
-                     srv.request.ok = true;
-                     srv.request.nogood = false;
-                     
-                     if (client.call(srv))
-                     {
-                     //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-                     }
-                     else
-                     {
-                     //  ROS_ERROR("Failed to call service add_two_ints");
-                     //  return 1;
-                     }
-                        }
+                    msg.init = false;
+                    msg.ok = true;
+                    msg.nogood = false;
+
+
+                    if (lower_priority_agent == "firefly_1") {
+                        dcsp_pub_1.publish(msg);
+                        ros::spinOnce();
+                    }else if (lower_priority_agent == "firefly_2") {
+                        dcsp_pub_2.publish(msg);
+                    }else if (lower_priority_agent == "firefly_3") {
+                        dcsp_pub_3.publish(msg);
+                    }
+
+                }
                 
                 break;
                 
@@ -327,7 +321,7 @@ void Agent::check_agent_view(){
 bool Agent::check_consistency(){
     
     bool is_consistent = false;
-    bool is_agent_view_consistent = false;
+    bool is_agent_view_consistent = true;
     
     std::vector<agent_view_element>::iterator it;
     
@@ -418,12 +412,11 @@ void Agent::backtrack(){
     }
     
     if (no_goods.empty()) {
-        puts("Algortithm terminated");
+        puts("No Solution found.");
     }else{
         
         agent_view_element first_agent_view_element = no_goods.front();
         std::string lowest_priority_agent_identifier = first_agent_view_element.agent_identifier;
-        
         
         std::vector<agent_view_element>::iterator it2;
         
@@ -455,23 +448,13 @@ void Agent::send_nogood_msg(const std::vector<agent_view_element> &no_goods, con
             
             /* Call the corresponding firefly node's service. Example : for firefly1 call dcspe_srv_1 service */
            
-            
-            std::string service_name;
-            
-            if (lowest_priority_agent_identifier == "firefly_1") {
-                service_name = "dcsp_srv_1";
-            }else if (lowest_priority_agent_identifier == "firefly_2") {
-                service_name = "dcsp_srv_2";
-            }else if (lowest_priority_agent_identifier == "firefly_3") {
-                service_name = "dcsp_srv_3";
-            }
-            
+
           
              /*   ROS SERVICE CALL TO THE CORRESPONDING FIREFLY DCSP SERVICE with NOGOOD flag */
              
-            ros::NodeHandle n;
-            ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>(service_name);
-            dcsp::dcsp_srv srv;
+//            ros::NodeHandle n;
+//            ros::ServiceClient client = n.serviceClient<dcsp::dcsp_msg>(service_name);
+            dcsp::dcsp_msg msg;
             // srv.request.init_agent_identifier = NULL;
             // srv.request.init_point = NULL;
             // srv.request.agents = NULL;
@@ -491,23 +474,21 @@ void Agent::send_nogood_msg(const std::vector<agent_view_element> &no_goods, con
 		
 		agentViewElementVector.push_back(a);	
 	    }
-            srv.request.no_goods = agentViewElementVector;
-            srv.request.init = false;
-            srv.request.ok = false;
-            srv.request.nogood = true;
-            
-            if (client.call(srv))
-            {
-                    //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-                    }
-            else
-                {
-                  //  ROS_ERROR("Failed to call service add_two_ints");
-                  //  return 1;
-                    }
-            
-             
-            
+            msg.no_goods = agentViewElementVector;
+            msg.init = false;
+            msg.ok = false;
+            msg.nogood = true;
+
+
+            if (lowest_priority_agent_identifier == "firefly_1") {
+                dcsp_pub_1.publish(msg);
+            }else if (lowest_priority_agent_identifier == "firefly_2") {
+                dcsp_pub_2.publish(msg);
+            }else if (lowest_priority_agent_identifier == "firefly_3") {
+                dcsp_pub_3.publish(msg);
+            }
+
+
         }
         
     }
@@ -516,8 +497,8 @@ void Agent::send_nogood_msg(const std::vector<agent_view_element> &no_goods, con
 
 void Agent::select_best_point(){
     
-    
-    double closest_euclidean_distance = 0.0;
+    ROS_INFO("select the best point in dcsp_server_1.");
+    double closest_euclidean_distance = std::numeric_limits<double>::infinity();
     
     std::vector<point>::iterator it;
     
@@ -535,12 +516,11 @@ void Agent::select_best_point(){
         if (euclidean_distance<closest_euclidean_distance) {
             closest_euclidean_distance = euclidean_distance;
             my_current_point = *it;
+	    ROS_INFO("BETS POINT IS SELECTED IN DCSP_SERVER_1");
+	    ROS_INFO("BEST POINT OF DCSP_SERVER_1 X, Y, Z: %f, %f, %f", my_current_point.x, my_current_point.y, my_current_point.z);
         }
         
     }
-    
-    
-    
 }
 
 bool Agent::same_points(const Agent::point &point1, const Agent::point &point2){
@@ -555,83 +535,83 @@ bool Agent::same_points(const Agent::point &point1, const Agent::point &point2){
     
 }
 
-void Agent::dcsp_srv_2_recieve_ok(){
+void Agent::dcsp_msg_2_recieve_ok(){
 
-    ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>("dcsp_srv_2");
-    dcsp::dcsp_srv srv;
+//    ros::NodeHandle n;
+//    ros::ServiceClient client = n.serviceClient<dcsp::dcsp_msg>("dcsp_msg_2");
+
+    dcsp::dcsp_msg msg;
     // srv.request.init_agent_identifier = NULL;
     // srv.request.init_point = NULL;
     // srv.request.agents = NULL;
     // srv.request.my_domain = NULL;
-
-    srv.request.ok_agent_identifier = my_agent_identifier;
+    msg.ok_agent_identifier = my_agent_identifier;
 
     dcsp::customPoint c;
     c.x = my_current_point.x;
     c.y = my_current_point.y;
     c.z = my_current_point.z;
-    srv.request.ok_value = c;
+    msg.ok_value = c;
 
     // srv.request.no_goods = NULL;
-    srv.request.init = false;
-    srv.request.ok = true;
-    srv.request.nogood = false;
+    msg.init = false;
+    msg.ok = true;
+    msg.nogood = false;
     
-    if (client.call(srv))
-    {
-    //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-    }
-    else
-    {
-    //  ROS_ERROR("Failed to call service add_two_ints");
-    //  return 1;
-    }
-
+//    if (client.call(srv))
+//    {
+//    //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+//    }
+//    else
+//    {
+//    //  ROS_ERROR("Failed to call service add_two_ints");
+//    //  return 1;
+//    }
+    dcsp_pub_2.publish(msg);
 }
 
-void Agent::dcsp_srv_3_recieve_ok(){
+void Agent::dcsp_msg_3_recieve_ok(){
     
-        ros::NodeHandle n;
-        ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>("dcsp_srv_3");
-        dcsp::dcsp_srv srv;
+//        ros::NodeHandle n;
+//        ros::ServiceClient client = n.serviceClient<dcsp::dcsp_msg>("dcsp_msg_3");
+        dcsp::dcsp_msg msg;
         // srv.request.init_agent_identifier = NULL;
         // srv.request.init_point = NULL;
         // srv.request.agents = NULL;
         // srv.request.my_domain = NULL;
-     srv.request.ok_agent_identifier = my_agent_identifier;
+    msg.ok_agent_identifier = my_agent_identifier;
 
 	    dcsp::customPoint c;
 	    c.x = my_current_point.x;
 	    c.y = my_current_point.y;
 	    c.z = my_current_point.z;
-	    srv.request.ok_value = c;
+	    msg.ok_value = c;
         // srv.request.no_goods = NULL;
-        srv.request.init = false;
-        srv.request.ok = true;
-        srv.request.nogood = false;
+    msg.init = false;
+    msg.ok = true;
+    msg.nogood = false;
         
-        if (client.call(srv))
-        {
-        //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
-        }
-        else
-        {
-        //  ROS_ERROR("Failed to call service add_two_ints");
-        //  return 1;
-        }
-    
+//        if (client.call(srv))
+//        {
+//        //ROS_INFO("Sum: %ld", (long int)srv.response.sum);
+//        }
+//        else
+//        {
+//        //  ROS_ERROR("Failed to call service add_two_ints");
+//        //  return 1;
+//        }
+    dcsp_pub_3.publish(msg);
     }
-bool Agent::select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response &res){
+void Agent::select_method(const dcsp::dcsp_msg& req){
     
     //Agent::point point;
     //Agent::req request;
     //Agent::req response;
-    
+    ROS_INFO("Inside the select_method of dcsp_server_1");
 
     if(req.init){
         std::vector<std::string> agentsVector;
-	 for (int i=0; i<req.agents.size(); i++){		
+	 for (int i=0; i<req.agents.size(); i++){
 		agentsVector.push_back(req.agents[i]);
 	}
 	 
@@ -659,9 +639,9 @@ bool Agent::select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response
 	point p;
 	p.x = req.ok_value.x;
 	p.y = req.ok_value.y;
-	p.z = req.ok_value.z; 
+	p.z = req.ok_value.z;
         recieve_ok_msg(ok_agent_identifier_string, p);
-        return true;
+
     }else if (req.nogood){
 	std::vector<agent_view_element> no_goods_vector;
 	for (int i=0; i<req.no_goods.size(); i++){
@@ -678,25 +658,47 @@ bool Agent::select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response
 	}
         receive_nogood_msg(no_goods_vector);
     }
-    
-    res.x = my_current_point.x;
-    res.y = my_current_point.y;
-    res.z = my_current_point.z;
 
-    return true;
-    
+//    res.x = my_current_point.x;
+//    res.y = my_current_point.y;
+//    res.z = my_current_point.z;
+
 }
-
 
 int main(int argc, char** argv)
 {
-    // insert code here...
+    std::clock_t start; ///////////
+    double duration; /////////////
+
     ros::init(argc, argv, "dcsp_server_1");
     ros::NodeHandle n;
-    Agent agent_temp;
-    ros::ServiceServer service = n.advertiseService("dcsp_srv_1", &Agent::select_method, &agent_temp);
+    Agent agent_temp ;
+
+    start = std::clock(); ///////////////////
+
+    ros::Subscriber sub = n.subscribe("dcsp_msg_1", 1000, &Agent::select_method, &agent_temp);
+    //ros::ServiceServer service = n.advertiseService("dcsp_mag_1", &Agent::select_method, &agent_temp);
+
     ROS_INFO("DCSP SERVICE 1 STARTED");
-    ros::spin();
+
+    dcsp_pub_1 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_1", 1000);
+    dcsp_pub_2 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_2", 1000);
+    dcsp_pub_3 = n.advertise<dcsp::dcsp_msg>("dcsp_msg_3", 1000);
+
+    ros::Rate loop_rate(0.1);
+
+while(n.ok()){
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC; ////////
+    ROS_INFO("******************Duration: %f *****************************", duration);
+    if(duration >= 0.1){
+        ROS_INFO("Publish my topics");
+    }
+
+    ros::spinOnce();
+    loop_rate.sleep();
+}
+
     return 0;
 }
 

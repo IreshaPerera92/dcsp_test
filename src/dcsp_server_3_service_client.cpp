@@ -15,7 +15,7 @@
 int main(int argc, char **argv)
 {
     int c1 = 0, c2 = 0, c3 = 0;
-    ros::init(argc, argv, "dcsp_server_1_client");
+    ros::init(argc, argv, "dcsp_server_3_client");
 
     //    if (argc != 3)
     //    {
@@ -24,11 +24,11 @@ int main(int argc, char **argv)
     //   }
 
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>("dcsp_srv_1");
+    ros::ServiceClient client = n.serviceClient<dcsp::dcsp_srv>("dcsp_srv_3");
 
     dcsp::dcsp_srv srv;
 
-    srv.request.init_agent_identifier = "firefly_1";
+    srv.request.init_agent_identifier = "firefly_3";
 
     dcsp::customPoint cp;
     cp.x = 1.0;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     srv.request.init_point = cp;
 
     std::vector<std::string> agents_vector;
-    agents_vector.push_back("firefly_2");
+    agents_vector.push_back("firefly_1");
     agents_vector.push_back("firefly_3");
     srv.request.agents = agents_vector;
 
@@ -73,14 +73,14 @@ int main(int argc, char **argv)
     no_goods_vector.push_back(agnt1);
 
     dcsp::agentViewElement agnt2;
-    agnt2.agent_identifier = "firefly_3";
+    agnt2.agent_identifier = "firefly_1";
     agnt2.value.x = 1.5;
     agnt2.value.y = 3.4;
     agnt2.value.z = 4.5;
     no_goods_vector.push_back(agnt2);
 
     dcsp::agentViewElement agnt3;
-    agnt3.agent_identifier = "firefly_2";
+    agnt3.agent_identifier = "firefly_1";
     agnt3.value.x = 1.5;
     agnt3.value.y = 3.0;
     agnt3.value.z = 2.5;

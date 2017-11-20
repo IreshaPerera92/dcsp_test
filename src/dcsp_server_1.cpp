@@ -718,12 +718,39 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
     Agent agent_temp ;
 
+    std::string ns = ros::this_node::getName();
+    
+    std::string server_name;
+     
+    std::string my_msg_name;
+    std::string my_srv_name;
+
+    if (!ros::param::get(ns + "/srv_name", server_name)) {
+        ROS_WARN("No maximal system speed specified. Looking for %s. Default is 0.25.",
+                 (ns + "/srv_name").c_str());
+      }
+
+      ROS_INFO("server name is %s",server_name);
+
+      if(server_name == "dcsp_server_1"){
+          my_msg_name = "dcsp_msg_1";
+          my_srv_name = "dcsp_srv_1";
+      }else if(server_name == "dcsp_server_1"){
+        my_msg_name = "dcsp_msg_2";
+        my_srv_name = "dcsp_srv_2";
+      }else if(server_name == "dcsp_server_3"){
+        my_msg_name = "dcsp_msg_3";
+        my_srv_name = "dcsp_srv_3";
+      }
+
+
+
     start = std::clock(); ///////////////////
 
-    ros::Subscriber sub = n.subscribe("dcsp_msg_1", 1000, &Agent::select_method, &agent_temp);
+    ros::Subscriber sub = n.subscribe(my_msg_name, 1000, &Agent::select_method, &agent_temp);
 
     //service for charith
-    ros::ServiceServer service = n.advertiseService("dcsp_srv_1", &Agent::init_select_method, &agent_temp); //*******
+    ros::ServiceServer service = n.advertiseService(my_msg_name, &Agent::init_select_method, &agent_temp); //*******
 
     ROS_INFO("DCSP SERVICE 1 STARTED");
 

@@ -102,6 +102,7 @@ public:
     void backtrack();
     void select_best_point();
     void select_method(const dcsp::dcsp_msg& req);
+    bool init_select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response &res  );
     void dcsp_msg_2_recieve_ok();
     void dcsp_msg_3_recieve_ok();
 
@@ -664,6 +665,50 @@ void Agent::select_method(const dcsp::dcsp_msg& req){
 //    res.z = my_current_point.z;
 }
 
+//service callback
+bool Agent::init_select_method(dcsp::dcsp_srv::Request &req, dcsp::dcsp_srv::Response &res  ){
+
+    //Agent::point point;
+    //Agent::req request;
+    //Agent::req response;
+    ROS_INFO("Inside the select_method of dcsp_server_1");
+
+    if(req.init){
+        std::vector<std::string> agentsVector;
+        for (int i=0; i<req.agents.size(); i++){
+            agentsVector.push_back(req.agents[i]);
+        }
+
+        std::string init_agent_identifier_variable = req.init_agent_identifier;
+        point pt;
+        pt.x = req.init_point.x;
+        pt.y = req.init_point.y;
+        pt.z = req.init_point.z;
+
+        std::vector<point> my_domain_vector;
+        for (int i=0; i<req.my_domain.size(); i++){
+            point p;
+            p.x = req.my_domain[i].x;
+            p.y = req.my_domain[i].y;
+            p.z = req.my_domain[i].z;
+
+            my_domain_vector.push_back(p);
+        }
+        agent_init(agentsVector, init_agent_identifier_variable ,pt ,my_domain_vector);
+
+    }
+    else{
+        return false;
+    }
+
+    res.x = my_current_point.x;
+    res.y = my_current_point.y;
+    res.z = my_current_point.z;
+
+    return true;
+
+}
+
 int main(int argc, char** argv)
 {
     std::clock_t start; ///////////
@@ -673,7 +718,8 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
     Agent agent_temp;
 
-    //ros::ServiceServer service = n.advertiseService("dcsp_mag_1", &Agent::select_method, &agent_temp);
+    //service for charith
+    ros::ServiceServer service = n.advertiseService("dcsp_srv_3", &Agent::init_select_method, &agent_temp); //*******
 
     ROS_INFO("DCSP SERVICE 3 STARTED");
 
